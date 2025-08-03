@@ -12,12 +12,13 @@ TELEGRAM_TOKEN = "7950081149:AAEwHty0BGgWNc-VKOxBBkVLoJNH6cE9QD8"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Carica il dataset
+# Caricamento dataset e vettori pre-elaborati
 with open("database_pillole_finanza.pkl", "rb") as f:
     data = pickle.load(f)
 
 df = data["data"]
 vectorizer = data["vectorizer"]
+X = data["vectors"]  # matrice vettoriale pre-elaborata
 
 bot = Bot(token=TELEGRAM_TOKEN)
 app = FastAPI()
@@ -25,8 +26,7 @@ app = FastAPI()
 def cerca_pillola(domanda):
     try:
         domanda_vect = vectorizer.transform([domanda])
-        vectors = df.drop(columns=["titolo", "fonte"]).values
-        sim = cosine_similarity(domanda_vect, vectors)[0]
+        sim = cosine_similarity(domanda_vect, X)[0]
         top_idx = sim.argmax()
         top_pillola = df.iloc[top_idx]
         return top_pillola["titolo"], top_pillola["fonte"], sim[top_idx]
